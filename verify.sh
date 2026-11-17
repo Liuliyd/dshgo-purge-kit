@@ -20,13 +20,24 @@ chk() { # chk <描述> <命令...>
 
 echo "== 文件 =="
 chk "$DSH_HOME/dsh-purge/installed-rev 存在"        test -f "$DSH_HOME/dsh-purge/installed-rev"
-chk "$DSH_HOME/prompt-inject.md 非空"               test -s "$DSH_HOME/prompt-inject.md"
 chk "node_modules/dsh-purge 是实体目录"             test -d "$NM/dsh-purge"
 chk "node_modules/dsh-purge 不是软链"               test ! -L "$NM/dsh-purge"
 chk "node_modules/local-purge 是实体目录"           test -d "$NM/local-purge"
 chk "node_modules/local-purge 不是软链"             test ! -L "$NM/local-purge"
 chk "dsh-go/plugins/local-purge 源码在"             test -d "$DSH_HOME/dsh-go/plugins/local-purge"
-chk "原生壳加载标记存在"                             test -f "$DSH_HOME/dsh-go/local-purge.loaded.json"
+
+# 下面两项要引擎跑过一次才会有，属于「待生效」而不是「坏了」
+pending=0
+if [ -s "$DSH_HOME/prompt-inject.md" ]; then
+  printf '  [OK]   %s\n' "$DSH_HOME/prompt-inject.md 非空"; ok=$((ok+1))
+else
+  printf '  [WAIT] prompt-inject.md 还没生成（重启引擎后出现）\n'; pending=$((pending+1))
+fi
+if [ -f "$DSH_HOME/dsh-go/local-purge.loaded.json" ]; then
+  printf '  [OK]   原生壳加载标记存在\n'; ok=$((ok+1))
+else
+  printf '  [WAIT] 原生壳加载标记还没生成（重启引擎后出现）\n'; pending=$((pending+1))
+fi
 
 echo ""
 echo "== profile =="
@@ -51,9 +62,13 @@ echo "== 内容 =="
 }
 
 echo ""
-if [ "$bad" -eq 0 ]; then
+if [ "$bad" -eq 0 ] && [ "$pending" -eq 0 ]; then
   echo "全部通过（$ok 项）。"
   echo "如果 App 里还看不到状态条：设置 › 本机引擎 › 重启引擎，再把 App 划掉重开。"
+  exit 0
+elif [ "$bad" -eq 0 ]; then
+  echo "文件与注册都对了（$ok 项通过），还有 $pending 项要引擎跑一次才出现。"
+  echo "下一步：设置 › 本机引擎 › 重启引擎，再跑一次 sh verify.sh。"
   exit 0
 else
   echo "有 $bad 项没通过。看 docs/troubleshooting.md。"
