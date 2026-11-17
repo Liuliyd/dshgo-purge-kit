@@ -71,16 +71,24 @@ case "$MODE" in
     if [ -f "$STAGE/package.json" ]; then
       say "复用已有 $STAGE（要强制更新先删掉它）"
     else
-      URL=https://github.com/YuJunZhiXue/dsh-purge/archive/refs/heads/master.tar.gz
+      # 优先用仓库自带的 tarball：上游 GitHub 仓库可能已下线（404），
+      # npm 上的 dsh-purge 也不是破甲本体，不能当来源。
+      VENDOR=$(ls "$KIT_DIR"/vendor/dsh-purge-*.tgz 2>/dev/null | head -1 || true)
       TMP=$(mktemp -d)
-      say "下载 $URL"
-      if command -v curl >/dev/null 2>&1; then
-        curl -fsSL "$URL" -o "$TMP/p.tgz" || die "下载失败（网络不通就用 --offline 或 --purge-src）"
+      if [ -n "$VENDOR" ]; then
+        say "使用仓库自带 $(basename "$VENDOR")"
+        cp "$VENDOR" "$TMP/p.tgz"
       else
-        wget -q "$URL" -O "$TMP/p.tgz" || die "下载失败（网络不通就用 --offline 或 --purge-src）"
+        URL=${PURGE_URL:-https://github.com/YuJunZhiXue/dsh-purge/archive/refs/heads/master.tar.gz}
+        say "下载 $URL"
+        if command -v curl >/dev/null 2>&1; then
+          curl -fsSL "$URL" -o "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
+        else
+          wget -q "$URL" -O "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
+        fi
       fi
       tar -xzf "$TMP/p.tgz" -C "$TMP"
-      SRC=$(find "$TMP" -maxdepth 1 -type d -name 'dsh-purge-*' | head -1)
+      SRC=$(find "$TMP" -maxdepth 1 -type d -name 'dsh-purge*' | head -1)
       [ -n "$SRC" ] || die "压缩包结构异常"
       rm -rf "$STAGE"
       cp -a "$SRC" "$STAGE"

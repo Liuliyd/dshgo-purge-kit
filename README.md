@@ -32,8 +32,10 @@ dsh: skipping profile bundle "dsh-purge": cannot resolve profile bundle ...
 
 | 组件 | 作用 | 来源 |
 |---|---|---|
-| `dsh-purge` | 破甲本体：提示词注入、`/purge` `/rules` `/skills` `/rewind`、`purge_apply` 等工具 | 安装时从 GitHub 下载 |
+| `dsh-purge` | 破甲本体：提示词注入、`/purge` `/rules` `/skills` `/rewind`、`purge_apply` 等工具 | 本仓库 `vendor/dsh-purge-1.1.71.tgz` |
 | `local-purge` | 原生壳：把破甲状态搬到 App 原生 UI | 本仓库 `plugins/local-purge` |
+
+> **为什么要自带 tarball**：上游 `YuJunZhiXue/dsh-purge` 和 `HunYiSage/dsh-purge` 现在都返回 404，npm 上的 `dsh-purge` 只有 `0.0.0-stage`（不是破甲本体）。所以 `install.sh` 默认从本仓库的 `vendor/` 取，取不到才回退上游 URL（可用 `PURGE_URL` 覆盖）。
 
 装完在手机上能看到：
 
@@ -51,18 +53,20 @@ dsh: skipping profile bundle "dsh-purge": cannot resolve profile bundle ...
 在 DSH Go 里打开 **终端**（`全部功能 › 终端`，或对话里让 agent 执行），跑：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/<you>/dshgo-purge-kit/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Liuliyd/dshgo-purge-kit/main/install.sh | sh
 ```
 
 或者先下载再跑（更稳，能看脚本）：
 
 ```sh
 cd /tmp
-curl -fsSL -o dshgo-purge-kit.tar.gz https://github.com/<you>/dshgo-purge-kit/archive/refs/heads/main.tar.gz
-tar -xzf dshgo-purge-kit.tar.gz
+curl -fsSL -o kit.tar.gz https://github.com/Liuliyd/dshgo-purge-kit/archive/refs/heads/main.tar.gz
+tar -xzf kit.tar.gz
 cd dshgo-purge-kit-main
 sh install.sh
 ```
+
+> 推荐第二种：`vendor/` 里的 tarball 只有跟着整包下载才在，单跑 `install.sh` 会回退到上游 URL（上游已 404，会失败）。
 
 装完在 **设置 › 本机引擎 › 重启引擎**，回到对话即可。
 
