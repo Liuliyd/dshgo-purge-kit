@@ -79,21 +79,28 @@ case "$MODE" in
         say "使用仓库自带 $(basename "$VENDOR")"
         cp "$VENDOR" "$TMP/p.tgz"
       else
-        URL=${PURGE_URL:-https://github.com/YuJunZhiXue/dsh-purge/archive/refs/heads/master.tar.gz}
-        say "下载 $URL"
-        if command -v curl >/dev/null 2>&1; then
-          curl -fsSL "$URL" -o "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
-        elif command -v wget >/dev/null 2>&1; then
-          wget -q "$URL" -O "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
-        else
-          node -e '
+        # 依次尝试：Release 附件 → 上游 archive → PURGE_URL
+        URLS=${PURGE_URL:-"https://github.com/Liuliyd/dshgo-purge-kit/releases/download/v1.1.71/dsh-purge-1.1.71.tgz
+https://github.com/YuJunZhiXue/dsh-purge/archive/refs/heads/master.tar.gz"}
+        got=0
+        for URL in $URLS; do
+          say "下载 $URL"
+          if command -v curl >/dev/null 2>&1; then
+            curl -fsSL "$URL" -o "$TMP/p.tgz" && { got=1; break; }
+          elif command -v wget >/dev/null 2>&1; then
+            wget -q "$URL" -O "$TMP/p.tgz" && { got=1; break; }
+          else
+            node -e '
 const fs=require("fs");
-fetch(process.argv[1],{signal:AbortSignal.timeout(90000)})
+fetch(process.argv[1],{signal:AbortSignal.timeout(90000),redirect:"follow"})
  .then(async r=>{ if(!r.ok) throw new Error("HTTP "+r.status);
    fs.writeFileSync(process.argv[2], Buffer.from(await r.arrayBuffer())) })
- .catch(e=>{ console.error(e.message); process.exit(1) });
-' "$URL" "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
-        fi
+ .catch(e=>{ console.error("  "+e.message); process.exit(1) });
+' "$URL" "$TMP/p.tgz" && { got=1; break; }
+          fi
+          say "  失败，换下一个"
+        done
+        [ "$got" = "1" ] || die "所有下载地址都失败。用 --offline 或 --purge-src 指定已有源码。"
       fi
       tar -xzf "$TMP/p.tgz" -C "$TMP"
       SRC=$(find "$TMP" -maxdepth 1 -type d -name 'dsh-purge*' | head -1)

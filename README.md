@@ -35,7 +35,21 @@ dsh: skipping profile bundle "dsh-purge": cannot resolve profile bundle ...
 | `dsh-purge` | 破甲本体：提示词注入、`/purge` `/rules` `/skills` `/rewind`、`purge_apply` 等工具 | 本仓库 `vendor/dsh-purge-1.1.71.tgz` |
 | `local-purge` | 原生壳：把破甲状态搬到 App 原生 UI | 本仓库 `plugins/local-purge` |
 
-> **为什么要自带 tarball**：上游 `YuJunZhiXue/dsh-purge` 和 `HunYiSage/dsh-purge` 现在都返回 404，npm 上的 `dsh-purge` 只有 `0.0.0-stage`（不是破甲本体）。所以 `install.sh` 默认从本仓库的 `vendor/` 取，取不到才回退上游 URL（可用 `PURGE_URL` 覆盖）。
+> **为什么自带 tarball**：上游 `YuJunZhiXue/dsh-purge` 和 `HunYiSage/dsh-purge` 现在都返回 404，npm 上的 `dsh-purge` 只有 `0.0.0-stage`（不是破甲本体）。所以 `install.sh` 按 `vendor/` → [Release 附件](https://github.com/Liuliyd/dshgo-purge-kit/releases/tag/v1.1.71) → 上游 URL 的顺序取，可用 `PURGE_URL` 覆盖。
+
+## Releases
+
+| tag | 内容 |
+|---|---|
+| [v1.1.71](https://github.com/Liuliyd/dshgo-purge-kit/releases/tag/v1.1.71) | 首个可用版本；附件 `dsh-purge-1.1.71.tgz`（1.46 MB，SHA256 `03FCF9C9…EF437`） |
+
+只想要破甲本体、不装原生壳的话，直接下附件：
+
+```sh
+curl -fL -o dsh-purge-1.1.71.tgz https://github.com/Liuliyd/dshgo-purge-kit/releases/download/v1.1.71/dsh-purge-1.1.71.tgz
+sh install.sh --purge-src <解压后的目录>
+```
+
 
 装完在手机上能看到：
 
