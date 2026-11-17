@@ -110,6 +110,7 @@ say "版本 = $(node -p "require('$STAGE/package.json').version" 2>/dev/null || 
 # ---------- 3. 实体目录安装（关键：不用软链） ----------
 say ""
 say "== 安装到 node_modules（实体目录） =="
+mkdir -p "$NM" "$GO_PLUGINS"
 for name in dsh-purge local-purge; do
   rm -rf "$NM/$name"
 done
@@ -124,7 +125,6 @@ mkdir -p "$GO_PLUGINS"
 cp -a "$SRC_LOCAL" "$GO_PLUGINS/local-purge"
 cp -a "$SRC_LOCAL" "$NM/local-purge"
 say "local-purge -> $NM/local-purge（源在 $GO_PLUGINS/local-purge）"
-
 # 兜底：万一源码里带了软链（pnpm/npm 的 link 农场），换成实体文件
 find "$NM/dsh-purge" "$NM/local-purge" -type l 2>/dev/null | while read -r l; do
   t=$(readlink -f "$l" 2>/dev/null || true)
