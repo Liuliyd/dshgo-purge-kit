@@ -50,23 +50,26 @@ dsh: skipping profile bundle "dsh-purge": cannot resolve profile bundle ...
 
 ## 安装（推荐：App 内终端，不需要 root）
 
-在 DSH Go 里打开 **终端**（`全部功能 › 终端`，或对话里让 agent 执行），跑：
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/Liuliyd/dshgo-purge-kit/main/install.sh | sh
-```
-
-或者先下载再跑（更稳，能看脚本）：
+在 DSH Go 里打开 **终端**（`全部功能 › 终端`，或对话里让 agent 执行）：
 
 ```sh
 cd /tmp
-curl -fsSL -o kit.tar.gz https://github.com/Liuliyd/dshgo-purge-kit/archive/refs/heads/main.tar.gz
-tar -xzf kit.tar.gz
+node -e 'const fs=require("fs");fetch("https://codeload.github.com/Liuliyd/dshgo-purge-kit/tar.gz/refs/heads/main",{signal:AbortSignal.timeout(90000)}).then(async r=>{if(!r.ok)throw new Error("HTTP "+r.status);fs.writeFileSync("/tmp/kit.tgz",Buffer.from(await r.arrayBuffer()));console.log("ok")}).catch(e=>{console.error(e.message);process.exit(1)})'
+tar -xzf kit.tgz
 cd dshgo-purge-kit-main
 sh install.sh
 ```
 
-> 推荐第二种：`vendor/` 里的 tarball 只有跟着整包下载才在，单跑 `install.sh` 会回退到上游 URL（上游已 404，会失败）。
+装完在 **设置 › 本机引擎 › 重启引擎**，回到对话即可。
+
+> **为什么不用 `curl ... | sh`**：DSH Go 的 rootfs 里**没有 curl，也没有 wget**（实测 `command -v curl` 空）。只有 `node`、`python3`、`pnpm`。所以上面用 `node -e` 拉包。如果你的环境有 curl，也可以用 `bootstrap.sh`：
+>
+> ```sh
+> sh bootstrap.sh                    # 依次试 codeload / archive，自动解包并安装
+> sh bootstrap.sh --mirror https://ghfast.top
+> ```
+>
+> `bootstrap.sh` 内部也是用 node 下载，不依赖 curl/wget。
 
 装完在 **设置 › 本机引擎 › 重启引擎**，回到对话即可。
 

@@ -83,8 +83,16 @@ case "$MODE" in
         say "下载 $URL"
         if command -v curl >/dev/null 2>&1; then
           curl -fsSL "$URL" -o "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
-        else
+        elif command -v wget >/dev/null 2>&1; then
           wget -q "$URL" -O "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
+        else
+          node -e '
+const fs=require("fs");
+fetch(process.argv[1],{signal:AbortSignal.timeout(90000)})
+ .then(async r=>{ if(!r.ok) throw new Error("HTTP "+r.status);
+   fs.writeFileSync(process.argv[2], Buffer.from(await r.arrayBuffer())) })
+ .catch(e=>{ console.error(e.message); process.exit(1) });
+' "$URL" "$TMP/p.tgz" || die "下载失败：上游不可达。用 --offline 或 --purge-src 指定已有源码。"
         fi
       fi
       tar -xzf "$TMP/p.tgz" -C "$TMP"
