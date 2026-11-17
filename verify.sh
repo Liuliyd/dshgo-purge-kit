@@ -19,15 +19,19 @@ chk() { # chk <描述> <命令...>
 }
 
 echo "== 文件 =="
-chk "$DSH_HOME/dsh-purge/installed-rev 存在"        test -f "$DSH_HOME/dsh-purge/installed-rev"
 chk "node_modules/dsh-purge 是实体目录"             test -d "$NM/dsh-purge"
 chk "node_modules/dsh-purge 不是软链"               test ! -L "$NM/dsh-purge"
 chk "node_modules/local-purge 是实体目录"           test -d "$NM/local-purge"
 chk "node_modules/local-purge 不是软链"             test ! -L "$NM/local-purge"
 chk "dsh-go/plugins/local-purge 源码在"             test -d "$DSH_HOME/dsh-go/plugins/local-purge"
 
-# 下面两项要引擎跑过一次才会有，属于「待生效」而不是「坏了」
+# 下面三项要引擎跑过一次才会有，属于「待生效」而不是「坏了」
 pending=0
+if [ -f "$DSH_HOME/dsh-purge/installed-rev" ]; then
+  printf '  [OK]   installed-rev 存在\n'; ok=$((ok+1))
+else
+  printf '  [WAIT] installed-rev 还没生成（重启引擎后出现）\n'; pending=$((pending+1))
+fi
 if [ -s "$DSH_HOME/prompt-inject.md" ]; then
   printf '  [OK]   %s\n' "$DSH_HOME/prompt-inject.md 非空"; ok=$((ok+1))
 else
