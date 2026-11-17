@@ -1,0 +1,38 @@
+{
+  "name": "local-purge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.2 <0.3.0-0"
+  },
+  "dshGo": {
+    "v": 1,
+    "title": { "zh": "破甲", "en": "Purge" },
+    "icon": "bolt",
+    "wants": ["message"],
+    "contributes": {
+      "composer.actions": [
+        { "id": "panel", "label": { "zh": "破甲状态", "en": "Purge" }, "icon": "bolt" }
+      ],
+      "composer.strip": [
+        { "id": "strip", "icon": "bolt", "panel": "purge" }
+      ],
+      "panels": [
+        { "id": "purge", "title": "破甲控制台", "icon": "bolt", "placement": ["session.tab", "features", "chat.panel"] }
+      ],
+      "composer.tools": [
+        { "id": "status-cmd", "label": "破甲详情", "icon": "info", "panel": "purge" }
+      ],
+      "message.actions": [
+        { "id": "clean-reply", "label": "净化这段回复", "icon": "sparkle" }
+      ]
+    }
+  }
+}

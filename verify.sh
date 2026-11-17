@@ -1,0 +1,61 @@
+#!/bin/sh
+# 体检：确认引擎在跑、插件是实体目录、破甲真的被加载。
+set -u
+
+DSH_HOME=${DSH_HOME:-$HOME/.dsh}
+PROFILE=${PROFILE:-web}
+P="$DSH_HOME/profiles/$PROFILE"
+NM="$P/node_modules"
+
+ok=0
+bad=0
+chk() { # chk <描述> <命令...>
+  desc=$1; shift
+  if "$@" >/dev/null 2>&1; then
+    printf '  [OK]   %s\n' "$desc"; ok=$((ok+1))
+  else
+    printf '  [FAIL] %s\n' "$desc"; bad=$((bad+1))
+  fi
+}
+
+echo "== 文件 =="
+chk "$DSH_HOME/dsh-purge/installed-rev 存在"        test -f "$DSH_HOME/dsh-purge/installed-rev"
+chk "$DSH_HOME/prompt-inject.md 非空"               test -s "$DSH_HOME/prompt-inject.md"
+chk "node_modules/dsh-purge 是实体目录"             test -d "$NM/dsh-purge"
+chk "node_modules/dsh-purge 不是软链"               test ! -L "$NM/dsh-purge"
+chk "node_modules/local-purge 是实体目录"           test -d "$NM/local-purge"
+chk "node_modules/local-purge 不是软链"             test ! -L "$NM/local-purge"
+chk "dsh-go/plugins/local-purge 源码在"             test -d "$DSH_HOME/dsh-go/plugins/local-purge"
+chk "原生壳加载标记存在"                             test -f "$DSH_HOME/dsh-go/local-purge.loaded.json"
+
+echo ""
+echo "== profile =="
+if [ -f "$P/package.json" ]; then
+  for n in dsh-purge local-purge; do
+    if grep -q "\"$n\"" "$P/package.json"; then
+      printf '  [OK]   bundles 里登记了 %s\n' "$n"; ok=$((ok+1))
+    else
+      printf '  [FAIL] bundles 里没有 %s\n' "$n"; bad=$((bad+1))
+    fi
+  done
+else
+  printf '  [FAIL] %s/package.json 不存在\n' "$P"; bad=$((bad+1))
+fi
+
+echo ""
+echo "== 内容 =="
+[ -f "$DSH_HOME/dsh-purge/installed-rev" ] && printf '  rev    = %s\n' "$(cat "$DSH_HOME/dsh-purge/installed-rev")"
+[ -f "$DSH_HOME/prompt-inject.md" ] && printf '  注入   = %s 字节\n' "$(wc -c < "$DSH_HOME/prompt-inject.md" | tr -d ' ')"
+[ -f "$DSH_HOME/dsh-go/local-purge.loaded.json" ] && {
+  printf '  原生壳 = '; tr -d '\n' < "$DSH_HOME/dsh-go/local-purge.loaded.json"; echo
+}
+
+echo ""
+if [ "$bad" -eq 0 ]; then
+  echo "全部通过（$ok 项）。"
+  echo "如果 App 里还看不到状态条：设置 › 本机引擎 › 重启引擎，再把 App 划掉重开。"
+  exit 0
+else
+  echo "有 $bad 项没通过。看 docs/troubleshooting.md。"
+  exit 1
+fi
